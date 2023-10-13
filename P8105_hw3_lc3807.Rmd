@@ -13,33 +13,12 @@ library(ggridges)
 library(patchwork)
 
 library(p8105.datasets)
-
-# set size of the figure
-knitr::opts_chunk$set(
-	echo = TRUE,
-	warning = FALSE,
-	fig.width = 8, 
-  fig.height = 6,
-  out.width = "90%"
-)
-
-
-theme_set(theme_minimal() + theme(legend.position = "bottom"))
-
-# color scheme for plots
-options(
-  ggplot2.continuous.colour = "viridis",
-  ggplot2.continuous.fill = "viridis"
-)
-
-scale_colour_discrete = scale_colour_viridis_d
-scale_fill_discrete = scale_fill_viridis_d
 ```
 
 
 ## Problem 1 
 
-# Load data set
+## Load data set
 
 ```{r}
 
@@ -49,12 +28,13 @@ data("instacart")
 instacart = 
   instacart |> 
   as_tibble()
+
 ```
 
 This dataset contains `r nrow(instacart)` rows and `r ncol(instacart)` columns, with each row resprenting a single product from an instacart order. Variables include identifiers for user, order, and product; the order in which each product was added to the cart. There are several order-level variables, describing the day and time of the order, and number of days since prior order. Then there are several item-specific variables, describing the product name (e.g. Yogurt, Avocado), department (e.g. dairy and eggs, produce), and aisle (e.g. yogurt, fresh fruits), and whether the item has been ordered by this user in the past. In total, there are `r instacart |> select(product_id) |> distinct() |> count()` products found in `r instacart |> select(user_id, order_id) |> distinct() |> count()` orders from `r instacart |> select(user_id) |> distinct() |> count()` distinct users.
 
 
-# Summarizing the number of items ordered from aisle
+## Summarizing the number of items ordered from aisle
 ```{r}
 instacart |> 
   count(aisle) |> 
@@ -64,7 +44,7 @@ instacart |>
 Above is a table summarizing the number of items ordered from aisle. In total, there are 134 aisles, with fresh vegetables and fresh fruits holding the most items ordered by far.
 
 
-# Plot the scatter plot
+## Plot the scatter plot
 ```{r}
 
 instacart |> 
@@ -79,7 +59,7 @@ instacart |>
 
 Above is a plot that shows the number of items ordered in each aisle. Here, aisles are ordered by ascending number of items. 
 
-# Show the three most popular items
+## Show the three most popular items
 ```{r}
 instacart |> 
   filter(aisle %in% c("baking ingredients", "dog food care", "packaged vegetables fruits")) |>
@@ -93,7 +73,7 @@ instacart |>
 
 The table shows the three most popular items in aisles `baking ingredients`, `dog food care`, and `packaged vegetables fruits`, and includes the number of times each item is ordered in your table.
 
-# The mean hour of the day
+## The mean hour of the day
 ```{r}
 instacart |>
   filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) |>
@@ -110,7 +90,7 @@ Finally, this is a table showing the mean hour of the day at which Pink Lady App
 
 ## Problem 2
 
-# Load the data and do some data cleaning
+## Load the data and do some data cleaning
 ```{r}
 library(p8105.datasets)
 data("brfss_smart2010")
@@ -127,8 +107,64 @@ brfss_smart2010 = brfss_smart2010 |>
          ) |> 
   mutate(response = factor(response, levels = c("Poor", "Fair", "Good", "Very good", "Excellent")))
 ```
-This dataset contains `r nrow(brfss_smart2010)` rows and `r ncol(brfss_smart2010)` columns, with each row representing the number of response about their overall health from "Poor" to "Excellent" in different location of all states.
+This dataset contains `r nrow(brfss_smart2010)` rows and `r ncol(brfss_smart2010)` columns, with each row representing the number of response about their overall health from "Poor" to "Excellent" in different location of all states every year.
 
+```{r}
 
+# count states with 7 or more location oberved in 2020
+state_counts_2002 = brfss_smart2010 |> 
+  filter(year == 2002) |> 
+  group_by(locationabbr) |> 
+  summarize(NumObservations = n())
+states_7_or_more_2002 = state_counts_2002 |> 
+  filter(NumObservations >= 7)
+# count states with 7 or more location oberved in 2010
+state_counts_2010 = brfss_smart2010 |> 
+  filter(year == 2010) |> 
+  group_by(locationabbr) |> 
+  summarize(NumObservations = n())
+states_7_or_more_2010 = state_counts_2010 |> 
+  filter(NumObservations >= 7)
+ 
+```
 
+In 2002, there are `r nrow(states_7_or_more_2002)` states were observed at 7 or more locations. They are `r states_7_or_more_2002 |> pull(locationabbr)`.
+In 2010, there are `r nrow(states_7_or_more_2010)` states were observed at 7 or more locations. They are `r states_7_or_more_2010 |> pull(locationabbr)`.
+
+```{r}
+# Filter the data for "Excellent" responses
+response_excellent = brfss_smart2010 |> 
+  filter(response == "Excellent") 
+
+state_response_excellent = response_excellent |> 
+  group_by(year,locationabbr) |> 
+  summarize(mean_data_value = mean(data_value, na.rm = TRUE))
+
+state_response_excellent |> 
+  ggplot(aes(x = year, y = mean_data_value, color = locationabbr)) +
+  geom_line() +
+  labs(title = "Averages Data_value for Each State",
+      x = "Years",
+      y = "Averages data_value")
+  
+```
+
+Above is plot showing averages data_value across locations for each state across years.
+
+```{r}
+state_counts_2006_2010 = brfss_smart2010 |> 
+  filter(year == 2006 | year == 2010, locationabbr == "NY")
+
+state_counts_2006_2010 |> 
+  ggplot(aes(x = response, y = data_value, fill = year )) +
+  geom_boxplot()+ 
+  facet_wrap(~ year) +
+  labs(title = "Distribution of Data Value by Response for NY State in 2006 and 2010",
+       x = "Response",
+       y = "Data Value") +
+  theme_minimal()
+  
+  
+  
+```
 
