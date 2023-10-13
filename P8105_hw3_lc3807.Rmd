@@ -99,7 +99,8 @@ data("brfss_smart2010")
 brfss_smart2010 = 
   brfss_smart2010 |> 
   as_tibble() |> 
-  janitor::clean_names()
+  janitor::clean_names() |> 
+  mutate(state = locationabbr)
 
 brfss_smart2010 = brfss_smart2010 |> 
   filter(topic == "Overall Health",
@@ -114,22 +115,22 @@ This dataset contains `r nrow(brfss_smart2010)` rows and `r ncol(brfss_smart2010
 # count states with 7 or more location oberved in 2020
 state_counts_2002 = brfss_smart2010 |> 
   filter(year == 2002) |> 
-  group_by(locationabbr) |> 
+  group_by(state) |> 
   summarize(NumObservations = n())
 states_7_or_more_2002 = state_counts_2002 |> 
   filter(NumObservations >= 7)
 # count states with 7 or more location oberved in 2010
 state_counts_2010 = brfss_smart2010 |> 
   filter(year == 2010) |> 
-  group_by(locationabbr) |> 
+  group_by(state) |> 
   summarize(NumObservations = n())
 states_7_or_more_2010 = state_counts_2010 |> 
   filter(NumObservations >= 7)
  
 ```
 
-In 2002, there are `r nrow(states_7_or_more_2002)` states were observed at 7 or more locations. They are `r states_7_or_more_2002 |> pull(locationabbr)`.
-In 2010, there are `r nrow(states_7_or_more_2010)` states were observed at 7 or more locations. They are `r states_7_or_more_2010 |> pull(locationabbr)`.
+In 2002, there are `r nrow(states_7_or_more_2002)` states were observed at 7 or more locations. They are `r states_7_or_more_2002 |> pull(state)`.
+In 2010, there are `r nrow(states_7_or_more_2010)` states were observed at 7 or more locations. They are `r states_7_or_more_2010 |> pull(state)`.
 
 ```{r}
 # Filter the data for "Excellent" responses
@@ -137,15 +138,15 @@ response_excellent = brfss_smart2010 |>
   filter(response == "Excellent") 
 # Caculate averages data_value
 state_response_excellent = response_excellent |> 
-  group_by(year,locationabbr) |> 
+  group_by(year,state) |> 
   summarize(mean_data_value = mean(data_value, na.rm = TRUE))
 # Make plot
 state_response_excellent |> 
-  ggplot(aes(x = year, y = mean_data_value, color = locationabbr)) +
+  ggplot(aes(x = year, y = mean_data_value, color = state)) +
   geom_line() +
   labs(title = "Averages Data_value for Each State",
       x = "Years",
-      y = "Averages data_value")
+      y = "Average data value")
   
 ```
 
@@ -154,7 +155,7 @@ Above is plot showing averages data_value across locations for each state across
 ```{r}
 # Creat dataframe for only year is 2006 or 2010
 state_counts_2006_2010 = brfss_smart2010 |> 
-  filter(year == 2006 | year == 2010, locationabbr == "NY")
+  filter(year == 2006 | year == 2010, state == "NY")
 # Make two-panel plot
 state_counts_2006_2010 |> 
   ggplot(aes(x = response, y = data_value, fill = response )) +
