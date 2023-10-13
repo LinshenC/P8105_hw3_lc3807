@@ -11,7 +11,6 @@ output: github_document
 library(tidyverse)
 library(ggridges)
 library(patchwork)
-
 library(p8105.datasets)
 ```
 
@@ -100,7 +99,7 @@ brfss_smart2010 =
   brfss_smart2010 |> 
   as_tibble() |> 
   janitor::clean_names() |> 
-  mutate(state = locationabbr)
+  rename(state = locationabbr)
 
 brfss_smart2010 = brfss_smart2010 |> 
   filter(topic == "Overall Health",
@@ -116,21 +115,19 @@ This dataset contains `r nrow(brfss_smart2010)` rows and `r ncol(brfss_smart2010
 state_counts_2002 = brfss_smart2010 |> 
   filter(year == 2002) |> 
   group_by(state) |> 
-  summarize(NumObservations = n())
-states_7_or_more_2002 = state_counts_2002 |> 
+  summarize(NumObservations = n_distinct(locationdesc)) |> 
   filter(NumObservations >= 7)
 # count states with 7 or more location oberved in 2010
 state_counts_2010 = brfss_smart2010 |> 
   filter(year == 2010) |> 
   group_by(state) |> 
-  summarize(NumObservations = n())
-states_7_or_more_2010 = state_counts_2010 |> 
+  summarize(NumObservations =  n_distinct(locationdesc)) |> 
   filter(NumObservations >= 7)
  
 ```
 
-In 2002, there are `r nrow(states_7_or_more_2002)` states were observed at 7 or more locations. They are `r states_7_or_more_2002 |> pull(state)`.
-In 2010, there are `r nrow(states_7_or_more_2010)` states were observed at 7 or more locations. They are `r states_7_or_more_2010 |> pull(state)`.
+In 2002, there are `r nrow(state_counts_2002)` states were observed at 7 or more locations. They are `r state_counts_2002 |> pull(state)`.
+In 2010, there are `r nrow(state_counts_2010)` states were observed at 7 or more locations. They are `r state_counts_2010 |> pull(state)`.
 
 ```{r}
 # Filter the data for "Excellent" responses
@@ -150,7 +147,7 @@ state_response_excellent |>
   
 ```
 
-Above is plot showing averages data_value across locations for each state across years.
+Above is plot showing averages data_value across locations for each state across years.There isn't a yearly trend.
 
 ```{r}
 # Creat dataframe for only year is 2006 or 2010
@@ -167,7 +164,7 @@ state_counts_2006_2010 |>
   theme_minimal()
 ```
 
-The above two-panel plot shows distribution of data value for responses (“Poor” to “Excellent”) among locations in NY State for the years 2006, and 2010.
+The above two-panel plot shows distribution of data value for responses (“Poor” to “Excellent”) among locations in NY State for the years 2006, and 2010. The distribution is similar between 2006 and 2010, and the rankings of the mean data value are very good, good, excellent, fair, and poor. The mean value for good, very good, and excellent is higher in 2010. Additionally, we can see that the "poor" group had the lowest variation throughout the course of both years.
 
 ## Problem 3
 
