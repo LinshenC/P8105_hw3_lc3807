@@ -193,7 +193,7 @@ nhanes_accel = read.csv("./data/nhanes_accel.csv") |>
   janitor::clean_names()|> 
   pivot_longer(
     min1:min1440,
-    names_to = "minute",
+    names_to = "minutes",
     values_to = "mims_value")
 # merge two dataframes
 
@@ -211,15 +211,55 @@ nhanes_count = nhanes_merge |>
 nhanes_covar |> 
   ggplot(aes(x = age , fill = sex,))+
   geom_density(alpha = 0.6)+
-  facet_grid(~education)
+  facet_grid(~education) +
+  labs(title = "Age Distributions for Men and Women in Each Education Category",
+       x = "Age",
+       y = "Density")
 
 ```
-According to table, there are no big difference between the number male and the number of female in each in each education category. However, in education category "More Than High School", the number of female with age between 25 and 40 is much larger than the number of female with same age based on density plot.
+
+According to table, there are no big difference between the number male and the number of female in each in each education category. However, in education category "More Than High School", the number of female with age between 25 and 40 is much larger than the number of female with same age based on density plot. In other words, in more than high school level, female has a slightly younger age.
+
 
 ## Create a total activity variable for each participant. Plot these total activities against age
 
 ```{r}
+# Create a table with total activity variable
+nhanes_total_activity = nhanes_merge |>
+  group_by(seqn,age,sex,education) |> 
+  summarise(total_activity = sum(mims_value)) 
 
+# Plot these total activities against age
+nhanes_total_activity |> 
+  ggplot(aes(x = age, y = total_activity, color = sex)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  facet_grid(. ~ education) +
+  labs(
+    title = "Total Activity against Age",
+    x = "Age",
+    y = "Total Activiy"
+  )
 ```
 
+Both genders' overall activity tends to decline with age. Women are more active overall before the age of 40 when they fall into the "Less than high school education" group. Women exhibit more overall activity in the "High school equivalent" category across most age groups. Similar to the previous group, females consistently exhibit higher overall activity across all age ranges in the "More than high school education" category.
+
+```{r}
+# create a dataframe for plot
+nhanes_merge |> 
+  mutate(minutes = str_remove_all(minutes, "min"),
+         minutes = as.numeric(minutes)) |>
+  arrange(minutes) |>
+# Make three-panel plot
+  ggplot(aes(x = minutes, y = mims_value, color = sex)) +
+  geom_point(alpha = 0.3) +
+  facet_wrap(~ education) +
+  geom_smooth(se = FALSE) +
+  labs(title = "24-hour Activity Time Courses for Each Education Level and Sex",
+       x = "Time",
+       y = "MIMS Value")+
+  theme_minimal()
+```
+
+Based on the chart, I found that regardless of education level, men and women have the same activi trends throughout the 24-hours a day.
 
